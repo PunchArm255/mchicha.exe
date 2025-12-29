@@ -20,7 +20,7 @@ we made this for the **1337 Game Jam** (don't ask how the jam went). the theme w
 
 if you hated the level design, direct your complaints to:
 
-* **Mohammed Nassiri** - (Me)
+* **Mohammed Nassiri**
 * **Yassine Esserdaoui**
 * **Hamza Sahraoui**
 
