@@ -1,0 +1,194 @@
+[gd_scene load_steps=15 format=3 uid="uid://chj62lao4p5e3"]
+
+[ext_resource type="Script" uid="uid://b17quv7nm0btn" path="res://scripts/level_base.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/images/backgrounds/stage4.png" id="2_bg"]
+[ext_resource type="Texture2D" uid="uid://de3lu2dvv7uud" path="res://assets/images/sprites/floor_top.png" id="3_floor_top"]
+[ext_resource type="Texture2D" uid="uid://8nlpociwsess" path="res://assets/images/sprites/floor_mid.png" id="4_floor_mid"]
+[ext_resource type="Texture2D" uid="uid://by58ndwicb4oq" path="res://assets/images/sprites/platformYassine.png" id="5_platform"]
+[ext_resource type="Texture2D" uid="uid://wbhge73op0hq" path="res://assets/images/sprites/door.png" id="6_door"]
+[ext_resource type="Texture2D" uid="uid://6fxhdfsrwc2v" path="res://assets/images/sprites/laser.png" id="7_laser"]
+[ext_resource type="PackedScene" uid="uid://bx5qllcugxrap" path="res://scenes/player.tscn" id="8_player"]
+[ext_resource type="Script" uid="uid://623rhvhxudv5" path="res://scripts/horizontal_moving_platform.gd" id="9_horizontal"]
+[ext_resource type="Script" uid="uid://dpj3h6u5b0hn4" path="res://scripts/closing_laser.gd" id="10_closing"]
+
+[sub_resource type="RectangleShape2D" id="Shape_floor_start"]
+size = Vector2(80, 40)
+
+[sub_resource type="RectangleShape2D" id="Shape_platform"]
+size = Vector2(115, 25)
+
+[sub_resource type="RectangleShape2D" id="Shape_door"]
+size = Vector2(30, 45)
+
+[sub_resource type="RectangleShape2D" id="Shape_laser"]
+size = Vector2(40, 600)
+
+[node name="Level4" type="Node2D"]
+script = ExtResource("1_script")
+level_number = 4
+
+[node name="Background" type="TextureRect" parent="."]
+offset_right = 800.0
+offset_bottom = 600.0
+texture = ExtResource("2_bg")
+expand_mode = 1
+
+[node name="SpawnPoint" type="Marker2D" parent="."]
+position = Vector2(60, 540)
+
+[node name="FloorStart" type="StaticBody2D" parent="."]
+position = Vector2(60, 560)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="FloorStart"]
+shape = SubResource("Shape_floor_start")
+
+[node name="FloorTop1" type="Sprite2D" parent="FloorStart"]
+position = Vector2(-22, 6)
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("3_floor_top")
+
+[node name="FloorTop2" type="Sprite2D" parent="FloorStart"]
+position = Vector2(22, 6)
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("3_floor_top")
+
+[node name="FloorMid1" type="Sprite2D" parent="FloorStart"]
+position = Vector2(-22, 50)
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("4_floor_mid")
+
+[node name="FloorTop3" type="Sprite2D" parent="FloorStart"]
+position = Vector2(-62, 6)
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("3_floor_top")
+
+[node name="FloorMid3" type="Sprite2D" parent="FloorStart"]
+position = Vector2(-62, 50)
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("4_floor_mid")
+
+[node name="FloorMid2" type="Sprite2D" parent="FloorStart"]
+position = Vector2(22, 50)
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("4_floor_mid")
+
+[node name="Platform1" type="AnimatableBody2D" parent="."]
+position = Vector2(200, 480)
+script = ExtResource("9_horizontal")
+move_distance = 80.0
+move_speed = 100.0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Platform1"]
+shape = SubResource("Shape_platform")
+
+[node name="Sprite" type="Sprite2D" parent="Platform1"]
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("5_platform")
+
+[node name="Platform2" type="AnimatableBody2D" parent="."]
+position = Vector2(350, 400)
+script = ExtResource("9_horizontal")
+move_speed = 140.0
+start_direction = -1.0
+start_delay = 0.3
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Platform2"]
+shape = SubResource("Shape_platform")
+
+[node name="Sprite" type="Sprite2D" parent="Platform2"]
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("5_platform")
+
+[node name="Platform3" type="AnimatableBody2D" parent="."]
+position = Vector2(250, 320)
+script = ExtResource("9_horizontal")
+move_distance = 120.0
+start_delay = 0.5
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Platform3"]
+shape = SubResource("Shape_platform")
+
+[node name="Sprite" type="Sprite2D" parent="Platform3"]
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("5_platform")
+
+[node name="Platform4" type="AnimatableBody2D" parent="."]
+position = Vector2(500, 350)
+script = ExtResource("9_horizontal")
+move_distance = 90.0
+move_speed = 120.0
+start_direction = -1.0
+start_delay = 0.2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Platform4"]
+shape = SubResource("Shape_platform")
+
+[node name="Sprite" type="Sprite2D" parent="Platform4"]
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("5_platform")
+
+[node name="Platform5" type="AnimatableBody2D" parent="."]
+position = Vector2(550, 250)
+script = ExtResource("9_horizontal")
+move_distance = 70.0
+move_speed = 160.0
+start_delay = 0.4
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Platform5"]
+shape = SubResource("Shape_platform")
+
+[node name="Sprite" type="Sprite2D" parent="Platform5"]
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("5_platform")
+
+[node name="DoorPlatform" type="StaticBody2D" parent="."]
+position = Vector2(403, 138)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DoorPlatform"]
+position = Vector2(1, 35)
+shape = SubResource("Shape_platform")
+
+[node name="Sprite" type="Sprite2D" parent="DoorPlatform"]
+position = Vector2(0, 40)
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("5_platform")
+
+[node name="Door" type="Area2D" parent="."]
+position = Vector2(400, 90)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Door"]
+position = Vector2(6, 42)
+shape = SubResource("Shape_door")
+
+[node name="DoorSprite" type="Sprite2D" parent="Door"]
+position = Vector2(6.2022705, 35.444992)
+scale = Vector2(0.31603023, 0.31603023)
+texture = ExtResource("6_door")
+
+[node name="LaserLeft" type="Area2D" parent="."]
+position = Vector2(-50, 300)
+script = ExtResource("10_closing")
+close_speed = 35.0
+from_direction = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LaserLeft"]
+shape = SubResource("Shape_laser")
+
+[node name="LaserSprite" type="Sprite2D" parent="LaserLeft"]
+scale = Vector2(0.6, 1)
+texture = ExtResource("7_laser")
+
+[node name="LaserRight" type="Area2D" parent="."]
+position = Vector2(850, 300)
+script = ExtResource("10_closing")
+close_speed = 35.0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LaserRight"]
+shape = SubResource("Shape_laser")
+
+[node name="LaserSprite" type="Sprite2D" parent="LaserRight"]
+scale = Vector2(0.6, 1)
+texture = ExtResource("7_laser")
+
+[node name="Player" parent="." instance=ExtResource("8_player")]
+position = Vector2(60, 540)

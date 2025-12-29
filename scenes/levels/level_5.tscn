@@ -1,0 +1,333 @@
+[gd_scene load_steps=15 format=3 uid="uid://cxexgwkf2h6bk"]
+
+[ext_resource type="Script" uid="uid://b17quv7nm0btn" path="res://scripts/level_base.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/images/backgrounds/stage5.jpg" id="2_bg"]
+[ext_resource type="Texture2D" uid="uid://8nlpociwsess" path="res://assets/images/sprites/floor_mid.png" id="3_floor"]
+[ext_resource type="Texture2D" uid="uid://wbhge73op0hq" path="res://assets/images/sprites/door.png" id="4_door"]
+[ext_resource type="Texture2D" uid="uid://6fxhdfsrwc2v" path="res://assets/images/sprites/laser.png" id="6_laser"]
+[ext_resource type="Texture2D" uid="uid://cyxw1bp1usung" path="res://assets/images/sprites/chmicha.png" id="7_sun"]
+[ext_resource type="PackedScene" uid="uid://bx5qllcugxrap" path="res://scenes/player.tscn" id="8_player"]
+[ext_resource type="Script" uid="uid://c6vf5hce27vy4" path="res://scripts/chasing_laser.gd" id="10_laser_script"]
+[ext_resource type="Script" uid="uid://cwfh1gy4xmhpm" path="res://scripts/chasing_sun.gd" id="11_sun_script"]
+
+[sub_resource type="RectangleShape2D" id="Shape_floor"]
+size = Vector2(700, 30)
+
+[sub_resource type="RectangleShape2D" id="Shape_platform"]
+size = Vector2(77, 20)
+
+[sub_resource type="RectangleShape2D" id="Shape_door"]
+size = Vector2(30, 45)
+
+[sub_resource type="RectangleShape2D" id="Shape_laser"]
+size = Vector2(30, 600)
+
+[sub_resource type="RectangleShape2D" id="Shape_sun"]
+size = Vector2(200, 200)
+
+[node name="Level5" type="Node2D"]
+script = ExtResource("1_script")
+level_name = "leave"
+level_number = 5
+
+[node name="Background" type="TextureRect" parent="."]
+offset_right = 800.0
+offset_bottom = 600.0
+texture = ExtResource("2_bg")
+expand_mode = 1
+
+[node name="SpawnPoint" type="Marker2D" parent="."]
+position = Vector2(60, 545)
+
+[node name="FloorBase" type="StaticBody2D" parent="."]
+position = Vector2(400, 570)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="FloorBase"]
+shape = SubResource("Shape_floor")
+
+[node name="F1" type="Sprite2D" parent="FloorBase"]
+position = Vector2(-320, 0)
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("3_floor")
+
+[node name="F2" type="Sprite2D" parent="FloorBase"]
+position = Vector2(-280, 0)
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("3_floor")
+
+[node name="F3" type="Sprite2D" parent="FloorBase"]
+position = Vector2(-240, 0)
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("3_floor")
+
+[node name="F4" type="Sprite2D" parent="FloorBase"]
+position = Vector2(-200, 0)
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("3_floor")
+
+[node name="F5" type="Sprite2D" parent="FloorBase"]
+position = Vector2(-160, 0)
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("3_floor")
+
+[node name="F6" type="Sprite2D" parent="FloorBase"]
+position = Vector2(-120, 0)
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("3_floor")
+
+[node name="F7" type="Sprite2D" parent="FloorBase"]
+position = Vector2(-80, 0)
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("3_floor")
+
+[node name="F8" type="Sprite2D" parent="FloorBase"]
+position = Vector2(-40, 0)
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("3_floor")
+
+[node name="F9" type="Sprite2D" parent="FloorBase"]
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("3_floor")
+
+[node name="F10" type="Sprite2D" parent="FloorBase"]
+position = Vector2(40, 0)
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("3_floor")
+
+[node name="F11" type="Sprite2D" parent="FloorBase"]
+position = Vector2(80, 0)
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("3_floor")
+
+[node name="F12" type="Sprite2D" parent="FloorBase"]
+position = Vector2(120, 0)
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("3_floor")
+
+[node name="F13" type="Sprite2D" parent="FloorBase"]
+position = Vector2(160, 0)
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("3_floor")
+
+[node name="F14" type="Sprite2D" parent="FloorBase"]
+position = Vector2(200, 0)
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("3_floor")
+
+[node name="F15" type="Sprite2D" parent="FloorBase"]
+position = Vector2(240, 0)
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("3_floor")
+
+[node name="F16" type="Sprite2D" parent="FloorBase"]
+position = Vector2(280, 0)
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("3_floor")
+
+[node name="F17" type="Sprite2D" parent="FloorBase"]
+position = Vector2(320, 0)
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("3_floor")
+
+[node name="Platform1" type="StaticBody2D" parent="."]
+position = Vector2(120, 500)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Platform1"]
+shape = SubResource("Shape_platform")
+
+[node name="Sprite" type="Sprite2D" parent="Platform1"]
+position = Vector2(-22, 0)
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("3_floor")
+
+[node name="Sprite2" type="Sprite2D" parent="Platform1"]
+position = Vector2(22, 0)
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("3_floor")
+
+[node name="Platform2" type="StaticBody2D" parent="."]
+position = Vector2(220, 440)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Platform2"]
+shape = SubResource("Shape_platform")
+
+[node name="Sprite" type="Sprite2D" parent="Platform2"]
+position = Vector2(-22, 0)
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("3_floor")
+
+[node name="Sprite2" type="Sprite2D" parent="Platform2"]
+position = Vector2(22, 0)
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("3_floor")
+
+[node name="Platform3" type="StaticBody2D" parent="."]
+position = Vector2(340, 490)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Platform3"]
+shape = SubResource("Shape_platform")
+
+[node name="Sprite" type="Sprite2D" parent="Platform3"]
+position = Vector2(-22, 0)
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("3_floor")
+
+[node name="Sprite2" type="Sprite2D" parent="Platform3"]
+position = Vector2(22, 0)
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("3_floor")
+
+[node name="Platform4" type="StaticBody2D" parent="."]
+position = Vector2(320, 380)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Platform4"]
+shape = SubResource("Shape_platform")
+
+[node name="Sprite" type="Sprite2D" parent="Platform4"]
+position = Vector2(-22, 0)
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("3_floor")
+
+[node name="Sprite2" type="Sprite2D" parent="Platform4"]
+position = Vector2(22, 0)
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("3_floor")
+
+[node name="Platform5" type="StaticBody2D" parent="."]
+position = Vector2(450, 420)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Platform5"]
+shape = SubResource("Shape_platform")
+
+[node name="Sprite" type="Sprite2D" parent="Platform5"]
+position = Vector2(-22, 0)
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("3_floor")
+
+[node name="Sprite2" type="Sprite2D" parent="Platform5"]
+position = Vector2(22, 0)
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("3_floor")
+
+[node name="Platform6" type="StaticBody2D" parent="."]
+position = Vector2(560, 480)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Platform6"]
+shape = SubResource("Shape_platform")
+
+[node name="Sprite" type="Sprite2D" parent="Platform6"]
+position = Vector2(-22, 0)
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("3_floor")
+
+[node name="Sprite2" type="Sprite2D" parent="Platform6"]
+position = Vector2(22, 0)
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("3_floor")
+
+[node name="Platform7" type="StaticBody2D" parent="."]
+position = Vector2(520, 350)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Platform7"]
+shape = SubResource("Shape_platform")
+
+[node name="Sprite" type="Sprite2D" parent="Platform7"]
+position = Vector2(-22, 0)
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("3_floor")
+
+[node name="Sprite2" type="Sprite2D" parent="Platform7"]
+position = Vector2(22, 0)
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("3_floor")
+
+[node name="Platform8" type="StaticBody2D" parent="."]
+position = Vector2(650, 400)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Platform8"]
+shape = SubResource("Shape_platform")
+
+[node name="Sprite" type="Sprite2D" parent="Platform8"]
+position = Vector2(-22, 0)
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("3_floor")
+
+[node name="Sprite2" type="Sprite2D" parent="Platform8"]
+position = Vector2(22, 0)
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("3_floor")
+
+[node name="Platform9" type="StaticBody2D" parent="."]
+position = Vector2(420, 290)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Platform9"]
+shape = SubResource("Shape_platform")
+
+[node name="Sprite" type="Sprite2D" parent="Platform9"]
+position = Vector2(-22, 0)
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("3_floor")
+
+[node name="Sprite2" type="Sprite2D" parent="Platform9"]
+position = Vector2(22, 0)
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("3_floor")
+
+[node name="DoorPlatform" type="StaticBody2D" parent="."]
+position = Vector2(700, 320)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DoorPlatform"]
+position = Vector2(-3.5, 1)
+shape = SubResource("Shape_platform")
+
+[node name="Sprite" type="Sprite2D" parent="DoorPlatform"]
+position = Vector2(-22, 0)
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("3_floor")
+
+[node name="Sprite2" type="Sprite2D" parent="DoorPlatform"]
+position = Vector2(16, 0)
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("3_floor")
+
+[node name="Door" type="Area2D" parent="."]
+position = Vector2(700, 280)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Door"]
+shape = SubResource("Shape_door")
+
+[node name="DoorSprite" type="Sprite2D" parent="Door"]
+position = Vector2(-3.2751465, -15.555023)
+scale = Vector2(0.37633172, 0.37633178)
+texture = ExtResource("4_door")
+
+[node name="ChasingLaser" type="Area2D" parent="."]
+position = Vector2(-30, 300)
+script = ExtResource("10_laser_script")
+chase_speed = 100.0
+door_trigger_x = 900.0
+start_delay = 1.5
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ChasingLaser"]
+shape = SubResource("Shape_laser")
+
+[node name="LaserSprite" type="Sprite2D" parent="ChasingLaser"]
+scale = Vector2(0.5, 1.2)
+texture = ExtResource("6_laser")
+
+[node name="ChasingSun" type="Area2D" parent="."]
+position = Vector2(900, 350)
+script = ExtResource("11_sun_script")
+attack_speed = 400.0
+start_delay = 1.0
+swing_height = 180.0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ChasingSun"]
+shape = SubResource("Shape_sun")
+
+[node name="SunSprite" type="Sprite2D" parent="ChasingSun"]
+scale = Vector2(0.6, 0.6)
+texture = ExtResource("7_sun")
+
+[node name="Player" parent="." instance=ExtResource("8_player")]
+position = Vector2(60, 545)

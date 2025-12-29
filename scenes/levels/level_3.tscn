@@ -1,0 +1,347 @@
+[gd_scene load_steps=21 format=3 uid="uid://cqeq63lgwupj4"]
+
+[ext_resource type="Script" uid="uid://b17quv7nm0btn" path="res://scripts/level_base.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/images/backgrounds/stage3.png" id="2_bg"]
+[ext_resource type="Texture2D" uid="uid://de3lu2dvv7uud" path="res://assets/images/sprites/floor_top.png" id="3_floor_top"]
+[ext_resource type="Texture2D" uid="uid://8nlpociwsess" path="res://assets/images/sprites/floor_mid.png" id="4_floor_mid"]
+[ext_resource type="Texture2D" uid="uid://by58ndwicb4oq" path="res://assets/images/sprites/platformYassine.png" id="5_platform"]
+[ext_resource type="Texture2D" uid="uid://wbhge73op0hq" path="res://assets/images/sprites/door.png" id="6_door"]
+[ext_resource type="Texture2D" uid="uid://d2ujn04o5106o" path="res://assets/images/sprites/spike.png" id="7_spike"]
+[ext_resource type="Texture2D" uid="uid://6fxhdfsrwc2v" path="res://assets/images/sprites/laser.png" id="8_laser"]
+[ext_resource type="PackedScene" uid="uid://bx5qllcugxrap" path="res://scenes/player.tscn" id="9_player"]
+[ext_resource type="Script" uid="uid://ddmv50gd7gi8i" path="res://scripts/moving_platform.gd" id="10_moving"]
+[ext_resource type="Script" uid="uid://bey2mjv72aj64" path="res://scripts/flying_spikes.gd" id="11_flying"]
+[ext_resource type="Script" uid="uid://c6vf5hce27vy4" path="res://scripts/chasing_laser.gd" id="12_laser"]
+[ext_resource type="Script" uid="uid://bqot01idtqsct" path="res://scripts/teleporting_door.gd" id="13_teleport"]
+
+[sub_resource type="RectangleShape2D" id="Shape_floor_left"]
+size = Vector2(132, 153)
+
+[sub_resource type="RectangleShape2D" id="Shape_floor_right"]
+size = Vector2(257, 156)
+
+[sub_resource type="RectangleShape2D" id="Shape_platform"]
+size = Vector2(100, 25)
+
+[sub_resource type="RectangleShape2D" id="Shape_spike"]
+size = Vector2(93, 447)
+
+[sub_resource type="RectangleShape2D" id="Shape_spike_hitbox"]
+size = Vector2(79, 25)
+
+[sub_resource type="RectangleShape2D" id="Shape_laser"]
+size = Vector2(30, 400)
+
+[sub_resource type="RectangleShape2D" id="Shape_door"]
+size = Vector2(30, 45)
+
+[node name="Level3" type="Node2D"]
+script = ExtResource("1_script")
+level_name = null
+level_number = 3
+
+[node name="Background" type="TextureRect" parent="."]
+offset_right = 800.0
+offset_bottom = 600.0
+texture = ExtResource("2_bg")
+expand_mode = 1
+
+[node name="SpawnPoint" type="Marker2D" parent="."]
+position = Vector2(70, 430)
+
+[node name="FloorLeft" type="StaticBody2D" parent="."]
+position = Vector2(70, 500)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="FloorLeft"]
+position = Vector2(-4, 20.5)
+shape = SubResource("Shape_floor_left")
+
+[node name="FloorContainer" type="Node2D" parent="FloorLeft"]
+
+[node name="FloorTop1" type="Sprite2D" parent="FloorLeft/FloorContainer"]
+position = Vector2(-48, -30)
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("3_floor_top")
+
+[node name="FloorTop2" type="Sprite2D" parent="FloorLeft/FloorContainer"]
+position = Vector2(-4, -30)
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("3_floor_top")
+
+[node name="FloorTop3" type="Sprite2D" parent="FloorLeft/FloorContainer"]
+position = Vector2(40, -30)
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("3_floor_top")
+
+[node name="FloorMid1_1" type="Sprite2D" parent="FloorLeft/FloorContainer"]
+position = Vector2(-48, 14)
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("4_floor_mid")
+
+[node name="FloorMid1_2" type="Sprite2D" parent="FloorLeft/FloorContainer"]
+position = Vector2(-4, 14)
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("4_floor_mid")
+
+[node name="FloorMid1_3" type="Sprite2D" parent="FloorLeft/FloorContainer"]
+position = Vector2(40, 14)
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("4_floor_mid")
+
+[node name="FloorMid2_1" type="Sprite2D" parent="FloorLeft/FloorContainer"]
+position = Vector2(-48, 58)
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("4_floor_mid")
+
+[node name="FloorMid2_2" type="Sprite2D" parent="FloorLeft/FloorContainer"]
+position = Vector2(-4, 58)
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("4_floor_mid")
+
+[node name="FloorMid2_3" type="Sprite2D" parent="FloorLeft/FloorContainer"]
+position = Vector2(40, 58)
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("4_floor_mid")
+
+[node name="FloorMid2_4" type="Sprite2D" parent="FloorLeft/FloorContainer"]
+position = Vector2(-47.8, 105.79999)
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("4_floor_mid")
+
+[node name="FloorMid2_5" type="Sprite2D" parent="FloorLeft/FloorContainer"]
+position = Vector2(-3.7999992, 105.79999)
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("4_floor_mid")
+
+[node name="FloorMid2_6" type="Sprite2D" parent="FloorLeft/FloorContainer"]
+position = Vector2(40.2, 105.79999)
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("4_floor_mid")
+
+[node name="FloorRight" type="StaticBody2D" parent="."]
+position = Vector2(730, 500)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="FloorRight"]
+position = Vector2(-58.5, 26)
+shape = SubResource("Shape_floor_right")
+
+[node name="FloorContainer" type="Node2D" parent="FloorRight"]
+
+[node name="FloorTop1" type="Sprite2D" parent="FloorRight/FloorContainer"]
+position = Vector2(-40, -35)
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("3_floor_top")
+
+[node name="FloorTop2" type="Sprite2D" parent="FloorRight/FloorContainer"]
+position = Vector2(4, -35)
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("3_floor_top")
+
+[node name="FloorTop3" type="Sprite2D" parent="FloorRight/FloorContainer"]
+position = Vector2(48, -35)
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("3_floor_top")
+
+[node name="FloorMid1_1" type="Sprite2D" parent="FloorRight/FloorContainer"]
+position = Vector2(-40, 9)
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("4_floor_mid")
+
+[node name="FloorMid1_2" type="Sprite2D" parent="FloorRight/FloorContainer"]
+position = Vector2(4, 9)
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("4_floor_mid")
+
+[node name="FloorMid1_3" type="Sprite2D" parent="FloorRight/FloorContainer"]
+position = Vector2(48, 9)
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("4_floor_mid")
+
+[node name="FloorMid2_1" type="Sprite2D" parent="FloorRight/FloorContainer"]
+position = Vector2(-40, 53)
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("4_floor_mid")
+
+[node name="FloorMid2_2" type="Sprite2D" parent="FloorRight/FloorContainer"]
+position = Vector2(4, 53)
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("4_floor_mid")
+
+[node name="FloorMid2_3" type="Sprite2D" parent="FloorRight/FloorContainer"]
+position = Vector2(48, 53)
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("4_floor_mid")
+
+[node name="FloorMid2_4" type="Sprite2D" parent="FloorRight/FloorContainer"]
+position = Vector2(-40, 101)
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("4_floor_mid")
+
+[node name="FloorMid2_5" type="Sprite2D" parent="FloorRight/FloorContainer"]
+position = Vector2(4, 101)
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("4_floor_mid")
+
+[node name="FloorMid2_6" type="Sprite2D" parent="FloorRight/FloorContainer"]
+position = Vector2(48, 101)
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("4_floor_mid")
+
+[node name="FloorTop5" type="Sprite2D" parent="FloorRight/FloorContainer"]
+position = Vector2(-124, -35)
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("3_floor_top")
+
+[node name="FloorTop6" type="Sprite2D" parent="FloorRight/FloorContainer"]
+position = Vector2(-80, -35)
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("3_floor_top")
+
+[node name="FloorMid1_5" type="Sprite2D" parent="FloorRight/FloorContainer"]
+position = Vector2(-124, 9)
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("4_floor_mid")
+
+[node name="FloorMid1_6" type="Sprite2D" parent="FloorRight/FloorContainer"]
+position = Vector2(-80, 9)
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("4_floor_mid")
+
+[node name="FloorMid2_8" type="Sprite2D" parent="FloorRight/FloorContainer"]
+position = Vector2(-124, 53)
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("4_floor_mid")
+
+[node name="FloorMid2_9" type="Sprite2D" parent="FloorRight/FloorContainer"]
+position = Vector2(-80, 53)
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("4_floor_mid")
+
+[node name="FloorMid2_11" type="Sprite2D" parent="FloorRight/FloorContainer"]
+position = Vector2(-124, 101)
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("4_floor_mid")
+
+[node name="FloorTop7" type="Sprite2D" parent="FloorRight/FloorContainer"]
+position = Vector2(-164, -35)
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("3_floor_top")
+
+[node name="FloorMid1_7" type="Sprite2D" parent="FloorRight/FloorContainer"]
+position = Vector2(-164, 9)
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("4_floor_mid")
+
+[node name="FloorMid2_10" type="Sprite2D" parent="FloorRight/FloorContainer"]
+position = Vector2(-164, 53)
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("4_floor_mid")
+
+[node name="FloorMid2_13" type="Sprite2D" parent="FloorRight/FloorContainer"]
+position = Vector2(-164, 101)
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("4_floor_mid")
+
+[node name="FloorTop8" type="Sprite2D" parent="FloorRight/FloorContainer"]
+position = Vector2(-182.80005, -34.400024)
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("3_floor_top")
+
+[node name="FloorMid1_8" type="Sprite2D" parent="FloorRight/FloorContainer"]
+position = Vector2(-182.80005, 9.599976)
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("4_floor_mid")
+
+[node name="FloorMid2_14" type="Sprite2D" parent="FloorRight/FloorContainer"]
+position = Vector2(-182.80005, 53.599976)
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("4_floor_mid")
+
+[node name="FloorMid2_15" type="Sprite2D" parent="FloorRight/FloorContainer"]
+position = Vector2(-182.80005, 101.599976)
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("4_floor_mid")
+
+[node name="FloorMid2_12" type="Sprite2D" parent="FloorRight/FloorContainer"]
+position = Vector2(-80, 101)
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("4_floor_mid")
+
+[node name="MovingPlatform1" type="AnimatableBody2D" parent="."]
+position = Vector2(280, 450)
+script = ExtResource("10_moving")
+move_distance = 120.0
+move_speed = 60.0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="MovingPlatform1"]
+shape = SubResource("Shape_platform")
+
+[node name="Sprite" type="Sprite2D" parent="MovingPlatform1"]
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("5_platform")
+
+[node name="MovingPlatform2" type="AnimatableBody2D" parent="."]
+position = Vector2(450, 380)
+script = ExtResource("10_moving")
+start_delay = 0.5
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="MovingPlatform2"]
+position = Vector2(4, 23)
+shape = SubResource("Shape_platform")
+
+[node name="Sprite" type="Sprite2D" parent="MovingPlatform2"]
+position = Vector2(-3, 24)
+scale = Vector2(0.38000003, 0.4)
+texture = ExtResource("5_platform")
+
+[node name="FlyingSpikes" type="Area2D" parent="."]
+position = Vector2(620, 480)
+script = ExtResource("11_flying")
+launch_speed = 700.0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="FlyingSpikes"]
+position = Vector2(-43.5, -244.5)
+shape = SubResource("Shape_spike")
+
+[node name="Spike1" type="Sprite2D" parent="FlyingSpikes"]
+position = Vector2(-47, -38.649902)
+scale = Vector2(0.19338226, 0.12977925)
+texture = ExtResource("7_spike")
+
+[node name="SpikeHitbox" type="Area2D" parent="FlyingSpikes"]
+position = Vector2(-31, -38)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="FlyingSpikes/SpikeHitbox"]
+position = Vector2(-4.5, 0)
+shape = SubResource("Shape_spike_hitbox")
+
+[node name="ChasingLaser" type="Area2D" parent="."]
+position = Vector2(-30, 300)
+script = ExtResource("12_laser")
+chase_speed = 130.0
+door_trigger_x = 650.0
+start_delay = 2.0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ChasingLaser"]
+shape = SubResource("Shape_laser")
+
+[node name="LaserSprite" type="Sprite2D" parent="ChasingLaser"]
+scale = Vector2(0.5, 1)
+texture = ExtResource("8_laser")
+
+[node name="Door" type="Area2D" parent="."]
+position = Vector2(730, 430)
+script = ExtResource("13_teleport")
+teleport_distance = 70.0
+teleport_to_position = Vector2(70, 430)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Door"]
+shape = SubResource("Shape_door")
+
+[node name="DoorSprite" type="Sprite2D" parent="Door"]
+position = Vector2(-1.8128662, -17.555054)
+scale = Vector2(0.27582914, 0.27582914)
+texture = ExtResource("6_door")
+
+[node name="Player" parent="." instance=ExtResource("9_player")]
+position = Vector2(70, 442)

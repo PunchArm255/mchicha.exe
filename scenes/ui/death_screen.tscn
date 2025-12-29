@@ -1,0 +1,185 @@
+[gd_scene load_steps=4 format=3 uid="uid://balsjrrk88s1c"]
+
+[sub_resource type="GDScript" id="GDScript_death"]
+script/source = "extends Control
+
+## Death screen with adaptive behavior based on glitch intensity
+
+signal retry_pressed
+
+@onready var death_label: Label = $CenterContainer/VBoxContainer/DeathLabel
+@onready var retry_button: Button = $CenterContainer/VBoxContainer/RetryButton
+@onready var glitch_overlay: ColorRect = $GlitchOverlay
+@onready var background: ColorRect = $Background
+
+
+func _ready() -> void:
+	hide()
+	retry_button.pressed.connect(_on_retry_pressed)
+	# Ensure button responds to mouse
+	retry_button.focus_mode = Control.FOCUS_ALL
+	retry_button.mouse_filter = Control.MOUSE_FILTER_STOP
+	print('[DeathScreen] Ready, button connected')
+
+
+func show_death_screen() -> void:
+	print('[DeathScreen] Showing death screen')
+	var style = GameManager.death_style
+	
+	# Always show the retry button for clean death
+	retry_button.show()
+	retry_button.disabled = false
+	retry_button.mouse_filter = Control.MOUSE_FILTER_STOP
+	
+	match style:
+		GameManager.DeathStyle.CLEAN:
+			_show_clean_death()
+		GameManager.DeathStyle.GLITCHY:
+			_show_glitchy_death()
+		GameManager.DeathStyle.CORRUPTED:
+			_show_corrupted_death()
+	
+	show()
+	# Grab focus so button is ready
+	retry_button.grab_focus()
+
+
+func _show_clean_death() -> void:
+	death_label.text = 'Oops!'
+	death_label.add_theme_color_override('font_color', Color(1.0, 0.4, 0.7))
+	death_label.add_theme_color_override('font_shadow_color', Color(0.4, 0.1, 0.3))
+	death_label.show()
+	glitch_overlay.hide()
+	background.color = Color(0.15, 0.1, 0.2, 0.9)
+	retry_button.text = 'Try Again!'
+	retry_button.modulate = Color.WHITE
+	retry_button.show()
+	
+	modulate.a = 0.0
+	var tween = create_tween()
+	tween.tween_property(self, 'modulate:a', 1.0, 0.3)
+
+
+func _show_glitchy_death() -> void:
+	death_label.hide()
+	glitch_overlay.show()
+	background.color = Color(0, 0, 0, 0.8)
+	retry_button.text = 'RETRY'
+	retry_button.hide()
+	
+	GlitchManager.trigger_death_glitch()
+	modulate.a = 1.0
+	
+	await get_tree().create_timer(0.8).timeout
+	retry_button.show()
+	retry_button.grab_focus()
+
+
+func _show_corrupted_death() -> void:
+	death_label.text = 'Y̷O̵U̸ ̶D̷I̶E̶D̷'
+	death_label.add_theme_color_override('font_color', Color(1, 0.2, 0.2))
+	death_label.show()
+	death_label.modulate = Color(1, 0.3, 0.3)
+	glitch_overlay.show()
+	background.color = Color(0, 0, 0, 0.9)
+	retry_button.text = 'R̵E̶T̵R̷Y̶'
+	retry_button.hide()
+	
+	GlitchManager.trigger_death_glitch()
+	modulate.a = 1.0
+	
+	await get_tree().create_timer(1.2).timeout
+	retry_button.show()
+	retry_button.modulate = Color(1, 0.8, 0.8)
+	retry_button.grab_focus()
+
+
+func _on_retry_pressed() -> void:
+	print('[DeathScreen] Retry button pressed!')
+	hide()
+	retry_pressed.emit()
+
+
+func reset() -> void:
+	hide()
+	death_label.modulate = Color.WHITE
+	retry_button.modulate = Color.WHITE
+"
+
+[sub_resource type="Shader" id="Shader_glitch_overlay"]
+code = "shader_type canvas_item;
+
+uniform float intensity : hint_range(0.0, 1.0) = 0.5;
+
+void fragment() {
+	float noise = fract(sin(dot(UV + TIME, vec2(12.9898, 78.233))) * 43758.5453);
+	float lines = step(0.5, fract(UV.y * 100.0 + TIME * 10.0));
+	COLOR = vec4(vec3(noise * lines), intensity * 0.3);
+}"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_glitch"]
+shader = SubResource("Shader_glitch_overlay")
+shader_parameter/intensity = 0.5
+
+[node name="DeathScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = SubResource("GDScript_death")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.15, 0.1, 0.2, 0.9)
+
+[node name="GlitchOverlay" type="ColorRect" parent="."]
+visible = false
+material = SubResource("ShaderMaterial_glitch")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(1, 0, 0, 0.2)
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 30
+alignment = 1
+
+[node name="DeathLabel" type="Label" parent="CenterContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.4, 0.7, 1)
+theme_override_colors/font_shadow_color = Color(0.4, 0.1, 0.3, 1)
+theme_override_font_sizes/font_size = 48
+text = "Oops!"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="RetryButton" type="Button" parent="CenterContainer/VBoxContainer"]
+custom_minimum_size = Vector2(160, 50)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 24
+action_mode = 0
+text = "Try Again!"

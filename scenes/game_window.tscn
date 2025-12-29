@@ -1,0 +1,511 @@
+[gd_scene load_steps=11 format=3 uid="uid://bf50lx8dirs2r"]
+
+[ext_resource type="Texture2D" uid="uid://cccdks758d2r0" path="res://assets/images/backgrounds/title.jpg" id="1_title_bg"]
+[ext_resource type="Shader" uid="uid://b5q85oye436iu" path="res://shaders/vhs.gdshader" id="2_shader"]
+[ext_resource type="PackedScene" path="res://scenes/ui/transition_screen.tscn" id="3_transition"]
+[ext_resource type="PackedScene" path="res://scenes/ui/death_screen.tscn" id="4_death"]
+[ext_resource type="PackedScene" path="res://scenes/ui/level_timer.tscn" id="5_timer"]
+[ext_resource type="AudioStream" path="res://title.wav" id="6_title_sfx"]
+[ext_resource type="AudioStream" path="res://assets/audio/music/stage123.wav" id="7_stage123_sfx"]
+[ext_resource type="AudioStream" path="res://assets/audio/music/dark.wav" id="8_dark_sfx"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/level.wav" id="9_level_sfx"]
+
+[sub_resource type="GDScript" id="GDScript_game_window"]
+script/source = "extends Control
+
+## Main game window - the 'virus game' that opens from the desktop
+
+@onready var title_screen: Control = $TitleScreen
+@onready var level_container: Node2D = $LevelContainer
+@onready var transition_screen: Control = $TransitionScreen
+@onready var death_screen: Control = $DeathScreen
+@onready var vhs_rect: ColorRect = $VHS_Overlay/VHS_Shader_Rect
+@onready var black_cover: ColorRect = $BlackCover
+@onready var level_timer: CanvasLayer = $LevelTimer
+@onready var stage_selector: Control = $StageSelector
+@onready var title_sfx: AudioStreamPlayer = $TitleSFX
+@onready var stage123_sfx: AudioStreamPlayer = $Stage123SFX
+@onready var dark_sfx: AudioStreamPlayer = $DarkSFX
+@onready var level_sfx: AudioStreamPlayer = $LevelSFX
+
+var current_level_instance: Node2D = null
+var is_transitioning: bool = false
+
+# Secret code tracking (left, right, right, right)
+var secret_code: Array[String] = ['left', 'right', 'right', 'right']
+var code_input: Array[String] = []
+var code_timeout: float = 0.0
+
+
+func _ready() -> void:
+	# Register shader with GlitchManager
+	if vhs_rect and vhs_rect.material:
+		GlitchManager.register_shader(vhs_rect.material)
+	GlitchManager.register_game_container(self)
+	
+	# Connect signals
+	transition_screen.transition_finished.connect(_on_transition_finished)
+	death_screen.retry_pressed.connect(_on_retry_pressed)
+	
+	# Connect GameManager signals
+	GameManager.player_died.connect(_on_player_died)
+	GameManager.level_completed.connect(_on_level_completed)
+	
+	# Connect timer signal
+	level_timer.time_up.connect(_on_timer_expired)
+	
+	# Hide black cover initially
+	black_cover.hide()
+	
+	# Show title screen initially
+	_show_title_screen()
+
+
+func _process(delta: float) -> void:
+	# Reset code input after timeout
+	if code_timeout > 0:
+		code_timeout -= delta
+		if code_timeout <= 0:
+			code_input.clear()
+
+
+func _input(event: InputEvent) -> void:
+	# Only track secret code on title screen
+	if not title_screen.visible or stage_selector.visible:
+		return
+	
+	if event.is_action_pressed('ui_left'):
+		_add_code_input('left')
+	elif event.is_action_pressed('ui_right'):
+		_add_code_input('right')
+
+
+func _add_code_input(dir: String) -> void:
+	code_input.append(dir)
+	code_timeout = 2.0  # Reset after 2 seconds of no input
+	
+	# Check if code matches
+	if code_input.size() > secret_code.size():
+		code_input.pop_front()
+	
+	if code_input == secret_code:
+		code_input.clear()
+		_show_stage_selector()
+
+
+func _show_stage_selector() -> void:
+	stage_selector.show()
+
+
+func _hide_stage_selector() -> void:
+	stage_selector.hide()
+
+
+func _warp_to_stage(level_num: int) -> void:
+	stage_selector.hide()
+	title_screen.hide()
+	black_cover.show()
+	GameManager.current_level = level_num
+	GameManager.death_count = 0
+	_load_current_level()
+
+
+func _show_title_screen() -> void:
+	# Stop any level music
+	stage123_sfx.stop()
+	dark_sfx.stop()
+	
+	# Play title music (will loop)
+	title_sfx.play()
+	
+	title_screen.show()
+	level_container.hide()
+	transition_screen.hide()
+	death_screen.hide()
+	black_cover.hide()
+	level_timer.hide()
+	stage_selector.hide()
+
+
+func _show_bluescreen() -> void:
+	# Create a bluescreen overlay
+	var bluescreen = ColorRect.new()
+	bluescreen.color = Color(0.0, 0.0, 0.7, 1.0)
+	bluescreen.anchors_preset = Control.PRESET_FULL_RECT
+	add_child(bluescreen)
+	
+	# Add BSOD-style text
+	var label = Label.new()
+	label.text = ':('
+	label.add_theme_font_size_override('font_size', 120)
+	label.add_theme_color_override('font_color', Color.WHITE)
+	label.anchors_preset = Control.PRESET_CENTER
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	bluescreen.add_child(label)
+
+
+func _on_play_pressed() -> void:
+	# Show black cover to prevent any flash
+	black_cover.show()
+	title_screen.hide()
+	GameManager.start_game()
+	_load_current_level()
+
+
+func _on_quit_pressed() -> void:
+	# Return to desktop instead of quitting
+	var desktop = get_tree().root.get_node_or_null('Desktop')
+	if desktop and desktop.has_method('return_to_desktop'):
+		desktop.return_to_desktop()
+	else:
+		get_tree().quit()
+
+
+func _load_current_level() -> void:
+	var level_path = GameManager.get_current_level_scene()
+	if level_path.is_empty():
+		# No more levels - game complete!
+		_show_game_complete()
+		return
+	
+	# Stop title music when loading level
+	title_sfx.stop()
+	
+	# Clean up previous level
+	if current_level_instance:
+		current_level_instance.queue_free()
+		current_level_instance = null
+	
+	# Ensure black cover is shown during load
+	black_cover.show()
+	
+	# Load new level but keep it hidden until transition covers screen
+	var level_scene = load(level_path)
+	if level_scene:
+		current_level_instance = level_scene.instantiate()
+		level_container.add_child(current_level_instance)
+		
+		# Keep level hidden initially - show after transition fade-in
+		level_container.hide()
+		
+		# Play level.wav when stage name appears
+		level_sfx.play()
+		
+		# Start level music based on current level
+		_play_level_music()
+		
+		# Start transition (it will fade to black first)
+		var level_name = current_level_instance.get_display_name() if current_level_instance.has_method('get_display_name') else 'STAGE %d' % GameManager.current_level
+		is_transitioning = true
+		transition_screen.play_transition(level_name, 2.5, _on_transition_covered)
+		
+		# Update glitch effects
+		GlitchManager.on_level_change()
+
+
+func _on_transition_covered() -> void:
+	# Called when screen is fully covered by black - safe to show level
+	level_container.show()
+	# Hide black cover since transition is now covering
+	black_cover.hide()
+
+
+func _on_transition_finished() -> void:
+	is_transitioning = false
+	# Start the level after transition
+	if current_level_instance and current_level_instance.has_method('start_level'):
+		current_level_instance.start_level()
+	# Prepare timer - it will start when player moves
+	var player = current_level_instance.get_node_or_null('Player') if current_level_instance else null
+	level_timer.prepare_timer(player)
+
+
+func _on_player_died(_death_count: int) -> void:
+	# Stop timer and show death screen
+	level_timer.stop_timer()
+	GlitchManager.trigger_death_glitch()
+	death_screen.show_death_screen()
+
+
+func _on_retry_pressed() -> void:
+	# Respawn player
+	if current_level_instance and current_level_instance.has_method('respawn_player'):
+		current_level_instance.respawn_player()
+	# Reset platforms and traps
+	if current_level_instance and current_level_instance.has_method('reset_platforms'):
+		current_level_instance.reset_platforms()
+	# Reset and prepare timer (waits for movement)
+	level_timer.reset_timer()
+	var player = current_level_instance.get_node_or_null('Player') if current_level_instance else null
+	level_timer.prepare_timer(player)
+
+
+func _on_level_completed(_level: int) -> void:
+	# Show black cover before hiding level
+	black_cover.show()
+	
+	# Stop timer when completing level
+	level_timer.stop_timer()
+	
+	# Hide current level and advance
+	if current_level_instance:
+		current_level_instance.hide()
+	
+	# Brief pause then load next level
+	await get_tree().create_timer(0.5).timeout
+	GameManager.advance_to_next_level()
+	_load_current_level()
+
+
+func _show_game_complete() -> void:
+	# Stop level music
+	stage123_sfx.stop()
+	dark_sfx.stop()
+	
+	# Show 'w' transition
+	is_transitioning = true
+	transition_screen.play_transition('w', 2.0)
+	await transition_screen.transition_finished
+	is_transitioning = false
+	
+	# Show bluescreen for a moment
+	_show_bluescreen()
+	await get_tree().create_timer(2.0).timeout
+	
+	# Load 3D ending room
+	get_tree().change_scene_to_file('res://scenes/ending_room.tscn')
+
+
+func _play_level_music() -> void:
+	# Stop any currently playing level music
+	stage123_sfx.stop()
+	dark_sfx.stop()
+	
+	# Play appropriate music based on level
+	if GameManager.current_level <= 3:
+		stage123_sfx.play()
+	else:
+		dark_sfx.play()
+
+
+func _on_timer_expired() -> void:
+	# Timer ran out - kill the player
+	if current_level_instance:
+		var player = current_level_instance.get_node_or_null('Player')
+		if player and player.has_method('die'):
+			player.die()
+"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_vhs"]
+shader = ExtResource("2_shader")
+shader_parameter/scanline_count = 120.0
+shader_parameter/chromatic_aberration = 0.001
+shader_parameter/distortion = 10.0
+shader_parameter/static_intensity = 0.0
+
+[node name="GameWindow" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = SubResource("GDScript_game_window")
+
+[node name="BlackCover" type="ColorRect" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 1)
+
+[node name="TitleScreen" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TitleBG" type="TextureRect" parent="TitleScreen"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("1_title_bg")
+expand_mode = 1
+
+[node name="TitleLabel" type="Label" parent="TitleScreen"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -200.0
+offset_top = 100.0
+offset_right = 200.0
+offset_bottom = 188.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(1, 0.4, 0.7, 1)
+theme_override_colors/font_shadow_color = Color(0.2, 0, 0.3, 1)
+theme_override_font_sizes/font_size = 64
+text = "mchicha"
+horizontal_alignment = 1
+
+[node name="PlayButton" type="Button" parent="TitleScreen"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -100.0
+offset_top = -20.0
+offset_right = 100.0
+offset_bottom = 40.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 32
+text = "PLAY"
+
+[node name="QuitButton" type="Button" parent="TitleScreen"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -100.0
+offset_top = 60.0
+offset_right = 100.0
+offset_bottom = 120.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 32
+text = "QUIT"
+
+[node name="LevelContainer" type="Node2D" parent="."]
+visible = false
+
+[node name="TransitionScreen" parent="." instance=ExtResource("3_transition")]
+visible = false
+layout_mode = 1
+
+[node name="DeathScreen" parent="." instance=ExtResource("4_death")]
+visible = false
+layout_mode = 1
+
+[node name="LevelTimer" parent="." instance=ExtResource("5_timer")]
+
+[node name="StageSelector" type="Control" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Overlay" type="ColorRect" parent="StageSelector"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.7)
+
+[node name="Panel" type="PanelContainer" parent="StageSelector"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -120.0
+offset_top = -150.0
+offset_right = 120.0
+offset_bottom = 150.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="StageSelector/Panel"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="StageSelector/Panel/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "DEBUG STAGE SELECT"
+horizontal_alignment = 1
+
+[node name="Stage1" type="Button" parent="StageSelector/Panel/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Stage 1"
+
+[node name="Stage2" type="Button" parent="StageSelector/Panel/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Stage 2"
+
+[node name="Stage3" type="Button" parent="StageSelector/Panel/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Stage 3"
+
+[node name="Stage4" type="Button" parent="StageSelector/Panel/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Stage 4"
+
+[node name="Stage5" type="Button" parent="StageSelector/Panel/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "FINAL STAGE"
+
+[node name="Close" type="Button" parent="StageSelector/Panel/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "CLOSE"
+
+[node name="VHS_Overlay" type="CanvasLayer" parent="."]
+
+[node name="VHS_Shader_Rect" type="ColorRect" parent="VHS_Overlay"]
+material = SubResource("ShaderMaterial_vhs")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="TitleSFX" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("6_title_sfx")
+volume_db = -5.0
+autoplay = false
+
+[node name="Stage123SFX" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("7_stage123_sfx")
+volume_db = -5.0
+
+[node name="DarkSFX" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("8_dark_sfx")
+volume_db = -5.0
+
+[node name="LevelSFX" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("9_level_sfx")
+volume_db = 0.0
+
+[connection signal="pressed" from="TitleScreen/PlayButton" to="." method="_on_play_pressed"]
+[connection signal="pressed" from="TitleScreen/QuitButton" to="." method="_on_quit_pressed"]
+[connection signal="pressed" from="StageSelector/Panel/VBox/Stage1" to="." method="_warp_to_stage" binds=[1]]
+[connection signal="pressed" from="StageSelector/Panel/VBox/Stage2" to="." method="_warp_to_stage" binds=[2]]
+[connection signal="pressed" from="StageSelector/Panel/VBox/Stage3" to="." method="_warp_to_stage" binds=[3]]
+[connection signal="pressed" from="StageSelector/Panel/VBox/Stage4" to="." method="_warp_to_stage" binds=[4]]
+[connection signal="pressed" from="StageSelector/Panel/VBox/Stage5" to="." method="_warp_to_stage" binds=[5]]
+[connection signal="pressed" from="StageSelector/Panel/VBox/Close" to="." method="_hide_stage_selector"]

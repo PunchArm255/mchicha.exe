@@ -1,0 +1,79 @@
+[gd_scene load_steps=2 format=3 uid="uid://transition_screen"]
+
+[sub_resource type="GDScript" id="GDScript_transition"]
+script/source = "extends Control
+
+## Screen transition with fade effect
+
+signal transition_finished
+signal screen_covered  # Emitted when fully black
+
+@onready var label: Label = $Label
+@onready var background: ColorRect = $Background
+
+var covered_callback: Callable = Callable()
+
+
+func play_transition(text: String, duration: float = 1.0, on_covered: Callable = Callable()) -> void:
+	label.text = text
+	covered_callback = on_covered
+	modulate.a = 0.0
+	show()
+	
+	var tween = create_tween()
+	# Fade in to black
+	tween.tween_property(self, 'modulate:a', 1.0, duration * 0.3)
+	tween.tween_callback(_on_screen_covered)
+	# Hold
+	tween.tween_interval(duration * 0.4)
+	# Fade out
+	tween.tween_property(self, 'modulate:a', 0.0, duration * 0.3)
+	tween.tween_callback(_on_transition_complete)
+
+
+func _on_screen_covered() -> void:
+	emit_signal('screen_covered')
+	if covered_callback.is_valid():
+		covered_callback.call()
+
+
+func _on_transition_complete() -> void:
+	hide()
+	emit_signal('transition_finished')
+"
+
+[node name="TransitionScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = SubResource("GDScript_transition")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 1)
+
+[node name="Label" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_top = -30.0
+offset_right = 150.0
+offset_bottom = 30.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 48
+text = "STAGE 1"
+horizontal_alignment = 1
+vertical_alignment = 1

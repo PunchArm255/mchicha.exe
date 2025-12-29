@@ -1,0 +1,483 @@
+[gd_scene load_steps=10 format=3 uid="uid://b4pqbidb77mmw"]
+
+[ext_resource type="Texture2D" uid="uid://d3yve5e2wph12" path="res://assets/images/backgrounds/desktop.jpg" id="1_bg"]
+[ext_resource type="Texture2D" uid="uid://u7ikppm6axph" path="res://assets/images/ui/jlibina.png" id="2_icon"]
+[ext_resource type="PackedScene" uid="uid://bf50lx8dirs2r" path="res://scenes/game_window.tscn" id="3_game"]
+[ext_resource type="Texture2D" uid="uid://dnoahh1106408" path="res://assets/images/ui/powerplay.png" id="4_powerplay"]
+[ext_resource type="AudioStream" uid="uid://0kdri1qfveew" path="res://assets/audio/sfx/death.wav" id="5_death_sfx"]
+[ext_resource type="AudioStream" uid="uid://bcb2weq2bdydb" path="res://assets/audio/music/desktop.wav" id="6_desktop_sfx"]
+[ext_resource type="AudioStream" uid="uid://dsiyexp67ki57" path="res://assets/audio/sfx/jumpscare.wav" id="7_jumpscare_sfx"]
+[ext_resource type="Texture2D" uid="uid://fd3faflxuwdl" path="res://assets/images/ui/jumpscare.png" id="8_jumpscare"]
+
+[sub_resource type="GDScript" id="GDScript_desktop"]
+script/source = "extends Control
+
+## Desktop scene - the fake desktop with boot sequence and games
+
+@onready var boot_screen: Control = $BootScreen
+@onready var desktop_layer: Control = $DesktopLayer
+@onready var game_container: Control = $GameContainer
+@onready var jlibina_icon: Control = $DesktopLayer/JlibinaIcon
+@onready var powerplay_icon: Control = $DesktopLayer/PowerplayIcon
+@onready var loading_bar: ProgressBar = $BootScreen/LoadingBar
+@onready var tv_overlay: ColorRect = $TVOverlay
+@onready var message_box: Control = $MessageBox
+@onready var freeze_overlay: ColorRect = $FreezeOverlay
+@onready var death_sfx: AudioStreamPlayer = $DeathSFX
+@onready var desktop_sfx: AudioStreamPlayer = $DesktopSFX
+@onready var jumpscare_sfx: AudioStreamPlayer = $JumpscareSFX
+@onready var jumpscare_rect: TextureRect = $JumpscareOverlay
+
+var powerplay_click_count: int = 0
+var is_dragging: bool = false
+var drag_offset: Vector2 = Vector2.ZERO
+var dragged_icon: Control = null
+var game_beaten: bool = false  # Track if player beat the game
+
+
+func _ready() -> void:
+	# Sync game_beaten from GameManager
+	game_beaten = GameManager.game_beaten
+	
+	# Start with boot screen
+	boot_screen.show()
+	desktop_layer.hide()
+	game_container.hide()
+	tv_overlay.hide()
+	message_box.hide()
+	freeze_overlay.hide()
+	jumpscare_rect.hide()
+	
+	# Show powerplay only if game was beaten
+	if game_beaten:
+		powerplay_icon.show()
+	else:
+		powerplay_icon.hide()
+	
+	# Prepare game container for zoom animation
+	game_container.pivot_offset = game_container.size / 2.0
+	
+	# Start boot sequence
+	_start_boot_sequence()
+
+
+func _start_boot_sequence() -> void:
+	loading_bar.value = 0
+	
+	# Play desktop sound during boot
+	desktop_sfx.play()
+	
+	# Animate loading bar
+	var tween = create_tween()
+	tween.tween_property(loading_bar, 'value', 100.0, 0.5)
+	tween.tween_callback(_on_loading_complete)
+
+
+func _on_loading_complete() -> void:
+	# Brief pause then TV-on effect
+	await get_tree().create_timer(0.3).timeout
+	_play_tv_on_effect()
+
+
+func _play_tv_on_effect() -> void:
+	# TV turn-on effect: white flash then vertical expand
+	boot_screen.hide()
+	tv_overlay.show()
+	tv_overlay.color = Color.WHITE
+	tv_overlay.modulate.a = 3.0
+	
+	# Show desktop behind
+	desktop_layer.show()
+	desktop_layer.modulate.a = 0
+	
+	var tween = create_tween()
+	# Flash white
+	tween.tween_property(tv_overlay, 'color', Color.BLACK, 0.1)
+	# Expand from center line (simulate TV turning on)
+	tween.tween_property(desktop_layer, 'modulate:a', 1.0, 0.15)
+	tween.parallel().tween_property(tv_overlay, 'modulate:a', 0.0, 0.2)
+	tween.tween_callback(_on_tv_on_complete)
+
+
+func _input(event: InputEvent) -> void:
+	# Handle drag release
+	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
+			if is_dragging:
+				is_dragging = false
+				dragged_icon = null
+	
+	# Handle drag motion
+	if event is InputEventMouseMotion and is_dragging and dragged_icon:
+		dragged_icon.position = get_global_mouse_position() - drag_offset
+
+
+func _start_drag(icon: Control) -> void:
+	is_dragging = true
+	dragged_icon = icon
+	drag_offset = get_global_mouse_position() - icon.position
+
+
+func _on_jlibina_icon_gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_LEFT:
+			if event.double_click:
+				_open_game()
+			elif event.pressed:
+				_start_drag(jlibina_icon)
+
+
+func _on_powerplay_icon_gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_LEFT:
+			if event.double_click:
+				_on_powerplay_clicked()
+			elif event.pressed:
+				_start_drag(powerplay_icon)
+
+
+func _on_powerplay_clicked() -> void:
+	powerplay_click_count += 1
+	
+	if powerplay_click_count == 1:
+		# First click - show 'no' message
+		message_box.show()
+	else:
+		# Second click - freeze crash
+		_trigger_freeze_crash()
+
+
+func _trigger_freeze_crash() -> void:
+	message_box.hide()
+	
+	# Show jumpscare
+	jumpscare_rect.show()
+	jumpscare_sfx.play()
+	
+	# Wait 2 seconds then quit
+	await get_tree().create_timer(0.5).timeout
+	get_tree().quit()
+
+
+func _on_message_box_closed() -> void:
+	message_box.hide()
+
+
+func _on_tv_on_complete() -> void:
+	tv_overlay.hide()
+	DiscordManager.set_desktop()
+
+
+func _open_game() -> void:
+	# Stop desktop music
+	desktop_sfx.stop()
+	
+	# Hide the icons
+	jlibina_icon.hide()
+	powerplay_icon.hide()
+	
+	# Windows-style zoom in animation
+	game_container.scale = Vector2(0.1, 0.1)
+	game_container.modulate.a = 0.5
+	game_container.show()
+	
+	var tween = create_tween()
+	tween.set_ease(Tween.EASE_OUT)
+	tween.set_trans(Tween.TRANS_BACK)
+	tween.tween_property(game_container, 'scale', Vector2(1.0, 1.0), 0.35)
+	tween.parallel().tween_property(game_container, 'modulate:a', 1.0, 0.2)
+
+
+func return_to_desktop() -> void:
+	# Called when quit button is pressed in game
+	game_container.hide()
+	jlibina_icon.show()
+	# Show powerplay only if game was beaten
+	if game_beaten:
+		powerplay_icon.show()
+	# Resume desktop music
+	desktop_sfx.play()
+
+
+func unlock_powerplay() -> void:
+	# Called from ending room when player returns
+	game_beaten = true
+"
+
+[node name="Desktop" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = SubResource("GDScript_desktop")
+
+[node name="BootScreen" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Background" type="ColorRect" parent="BootScreen"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 1)
+
+[node name="LoadingLabel" type="Label" parent="BootScreen"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -100.0
+offset_top = -40.0
+offset_right = 100.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 18
+text = "Loading..."
+horizontal_alignment = 1
+
+[node name="LoadingBar" type="ProgressBar" parent="BootScreen"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_right = 150.0
+offset_bottom = 25.0
+grow_horizontal = 2
+grow_vertical = 2
+show_percentage = false
+
+[node name="TVOverlay" type="ColorRect" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="DesktopLayer" type="Control" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="DesktopWallpaper" type="TextureRect" parent="DesktopLayer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("1_bg")
+expand_mode = 1
+
+[node name="JlibinaIcon" type="Control" parent="DesktopLayer"]
+anchors_preset = 0
+offset_left = 50.0
+offset_top = 50.0
+offset_right = 130.0
+offset_bottom = 155.0
+
+[node name="Icon" type="TextureRect" parent="DesktopLayer/JlibinaIcon"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 80.0
+grow_horizontal = 2
+texture = ExtResource("2_icon")
+expand_mode = 1
+
+[node name="Label" type="Label" parent="DesktopLayer/JlibinaIcon"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -47.0
+offset_top = -20.0
+offset_right = 47.0
+offset_bottom = 3.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+text = "mchicha.exe"
+horizontal_alignment = 1
+
+[node name="PowerplayIcon" type="Control" parent="DesktopLayer"]
+anchors_preset = 0
+offset_left = 50.0
+offset_top = 180.0
+offset_right = 130.0
+offset_bottom = 285.0
+
+[node name="Icon" type="TextureRect" parent="DesktopLayer/PowerplayIcon"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 80.0
+grow_horizontal = 2
+texture = ExtResource("4_powerplay")
+expand_mode = 1
+
+[node name="Label" type="Label" parent="DesktopLayer/PowerplayIcon"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -47.0
+offset_top = -20.0
+offset_right = 47.0
+offset_bottom = 3.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+text = "Powerplay"
+horizontal_alignment = 1
+
+[node name="GameContainer" type="Control" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="GameWindow" parent="GameContainer" instance=ExtResource("3_game")]
+layout_mode = 1
+
+[node name="MessageBox" type="Control" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Overlay" type="ColorRect" parent="MessageBox"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.5)
+
+[node name="Panel" type="PanelContainer" parent="MessageBox"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -140.0
+offset_top = -80.0
+offset_right = 140.0
+offset_bottom = 80.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="MessageBox/Panel"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="TitleBar" type="ColorRect" parent="MessageBox/Panel/VBox"]
+custom_minimum_size = Vector2(0, 28)
+layout_mode = 2
+color = Color(0, 0, 0.5, 1)
+
+[node name="TitleLabel" type="Label" parent="MessageBox/Panel/VBox/TitleBar"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 14
+text = "Powerplay"
+vertical_alignment = 1
+
+[node name="Content" type="MarginContainer" parent="MessageBox/Panel/VBox"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 15
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 15
+
+[node name="ContentVBox" type="VBoxContainer" parent="MessageBox/Panel/VBox/Content"]
+layout_mode = 2
+theme_override_constants/separation = 15
+
+[node name="Message" type="Label" parent="MessageBox/Panel/VBox/Content/ContentVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "error"
+horizontal_alignment = 1
+
+[node name="CloseButton" type="Button" parent="MessageBox/Panel/VBox/Content/ContentVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "Close"
+
+[node name="FreezeOverlay" type="ColorRect" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.8, 0, 0.1, 0.3)
+
+[node name="DeathSFX" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("5_death_sfx")
+volume_db = -3.0
+
+[node name="DesktopSFX" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("6_desktop_sfx")
+
+[node name="JumpscareSFX" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("7_jumpscare_sfx")
+
+[node name="JumpscareOverlay" type="TextureRect" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("8_jumpscare")
+expand_mode = 1
+
+[connection signal="gui_input" from="DesktopLayer/JlibinaIcon" to="." method="_on_jlibina_icon_gui_input"]
+[connection signal="gui_input" from="DesktopLayer/PowerplayIcon" to="." method="_on_powerplay_icon_gui_input"]
+[connection signal="pressed" from="MessageBox/Panel/VBox/Content/ContentVBox/CloseButton" to="." method="_on_message_box_closed"]
