@@ -39,6 +39,4 @@ if you hated the level design, direct your complaints to:
 
 ---
 
-**disclaimer 2:** we are not responsible for any emotional damage caused by the collisions or hitboxes.
-
----
+**notice:** we are not responsible for any emotional damage caused by the collisions or hitboxes.
