@@ -1,6 +1,6 @@
-# mchicha.exe 🥀
 <img width="965" height="330" alt="Screenshot 2025-12-29 at 8 16 33 PM" src="https://github.com/user-attachments/assets/07b4246a-8397-4946-acd5-aa15f0649f52" />
 
+# mchicha.exe 🥀
 > **disclamer:** this game is unfair and cancerous. if you break your keyboard, that's on you lol.
 
 ### what have we done
