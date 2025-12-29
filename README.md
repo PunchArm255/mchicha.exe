@@ -24,7 +24,7 @@ if you hated the level design, direct your complaints to:
 * **Yassine Esserdaoui**
 * **Hamza Sahraoui**
 
-* ### how to play
+### how to play
 
 1. download the thing.
 2. run `mchicha.exe`.
