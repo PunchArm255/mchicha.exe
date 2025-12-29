@@ -36,6 +36,7 @@ if you hated the level design, direct your complaints to:
 * **Engine:** Godot (because fuck C#)
 * **Art:** Hamza (and Gemini)
 * **Audio:** we seriously don't remember
+* **Prayers:** because 48h isn't enough for anything
 
 ---
 
