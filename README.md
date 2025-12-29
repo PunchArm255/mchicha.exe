@@ -14,7 +14,6 @@ we made this for the **1337 Game Jam** (don't ask how the jam went). the theme w
 * **Analog Horror Vibes:** VHS shaders, unsettling noises, and things that watch you.
 * **Unfair Gameplay:** think *Cat Mario* or *Devil Level* but worse. fake platforms? yes. traps that make zero sense? absolutely.
 * **The .exe Experience:** is it a game? is it a virus? (it's a game wlh, please don't report us lmao).
-* **Spaghetti Code:** handcrafted with love and panic.
 
 ### the team (blame these people)
 
