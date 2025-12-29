@@ -26,8 +26,8 @@ if you hated the level design, direct your complaints to:
 
 ### how to play
 
-1. download the thing.
-2. run `mchicha.exe`.
+1. visit the game page on itch.
+2. download `mchicha.exe`.
 3. turn off the lights.
 4. regret your decisions.
 
