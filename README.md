@@ -7,7 +7,7 @@
 
 **mchicha.exe** is a "platformer" (in the loosest sense of the word) inspired by analog horror, creepy pasta games, and that specific type of rage you only feel when a jump doesn't register.
 
-we made this for the **1337 Game Jam** (don't ask how the jam went). the theme was probably something reasonable (10 seconds to impact they said), but we decided to make whatever this is instead.
+we made this for the **1337 Game Jam** (don't ask how the jam went). the theme was probably something reasonable (10 seconds to impact they said), but we instead decided to make whatever this is.
 
 ### "features"
 
